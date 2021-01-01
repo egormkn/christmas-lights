@@ -1,148 +1,220 @@
-#include <Arduino.h>
-#include <Dhcp.h>
-#include <Ethernet.h>
-#include <FastLED.h>
-#include <RTClib.h>
+/*
+  Скетч к проекту "Адресная матрица"
+  Гайд по постройке матрицы: https://alexgyver.ru/matrix_guide/
+  Страница проекта (схемы, описания): https://alexgyver.ru/GyverMatrixBT/
+  Подробное описание прошивки: https://alexgyver.ru/gyvermatrixos-guide/
+  Исходники на GitHub: https://github.com/AlexGyver/GyverMatrixBT/
+  Нравится, как написан код? Поддержи автора! https://alexgyver.ru/support_alex/
+  Автор: AlexGyver Technologies, 2018
+  https://AlexGyver.ru/
+*/
+
+// GyverMatrixOS
+// Версия прошивки 1.12, совместима с приложением GyverMatrixBT версии 1.12 и выше
+// 1.12 - поправлен косяк с кнопкой SET на wemos/nodemcu
+
+// ************************ МАТРИЦА *************************
+// если прошивка не лезет в Arduino NANO - отключай режимы! Строка 60 и ниже
+
+#define BRIGHTNESS 150        // стандартная маскимальная яркость (0-255)
+#define CURRENT_LIMIT 2000    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
+
+#define WIDTH 16              // ширина матрицы
+#define HEIGHT 16             // высота матрицы
+#define SEGMENTS 1            // диодов в одном "пикселе" (для создания матрицы из кусков ленты)
+
+#define COLOR_ORDER GRB       // порядок цветов на ленте. Если цвет отображается некорректно - меняйте. Начать можно с RGB
+
+#define MATRIX_TYPE 0         // тип матрицы: 0 - зигзаг, 1 - параллельная
+#define CONNECTION_ANGLE 0    // угол подключения: 0 - левый нижний, 1 - левый верхний, 2 - правый верхний, 3 - правый нижний
+#define STRIP_DIRECTION 0     // направление ленты из угла: 0 - вправо, 1 - вверх, 2 - влево, 3 - вниз
+// при неправильной настрйоке матрицы вы получите предупреждение "Wrong matrix parameters! Set to default"
+// шпаргалка по настройке матрицы здесь! https://alexgyver.ru/matrix_guide/
+
+#define MCU_TYPE 0            // микроконтроллер: 
+//                            0 - AVR (Arduino NANO/MEGA/UNO)
+//                            1 - ESP8266 (NodeMCU, Wemos D1)
+//                            2 - STM32 (Blue Pill)
+
+// ******************** ЭФФЕКТЫ И РЕЖИМЫ ********************
+#define D_TEXT_SPEED 100      // скорость бегущего текста по умолчанию (мс)
+#define D_EFFECT_SPEED 80     // скорость эффектов по умолчанию (мс)
+#define D_GAME_SPEED 250      // скорость игр по умолчанию (мс)
+#define D_GIF_SPEED 80        // скорость гифок (мс)
+#define DEMO_GAME_SPEED 60    // скорость игр в демо режиме (мс)
+
+boolean AUTOPLAY = 1;         // 0 выкл / 1 вкл автоматическую смену режимов (откл. можно со смартфона)
+int AUTOPLAY_PERIOD = 10;     // время между авто сменой режимов (секунды)
+#define IDLE_TIME 10          // время бездействия кнопок или Bluetooth (в секундах) после которого запускается автосмена режимов и демо в играх
+
+// о поддерживаемых цветах читай тут https://alexgyver.ru/gyvermatrixos-guide/
+#define GLOBAL_COLOR_1 CRGB::Green    // основной цвет №1 для игр
+#define GLOBAL_COLOR_2 CRGB::Orange   // основной цвет №2 для игр
+
+#define SCORE_SIZE 0          // размер символов счёта в игре. 0 - маленький для 8х8 (шрифт 3х5), 1 - большой (шрифт 5х7)
+#define FONT_TYPE 1           // (0 / 1) два вида маленького шрифта в выводе игрового счёта
+
+// ************** ОТКЛЮЧЕНИЕ КОМПОНЕНТОВ СИСТЕМЫ (для экономии памяти) *************
+// внимание! отключение модуля НЕ УБИРАЕТ его эффекты из списка воспроизведения!
+// Это нужно сделать вручную во вкладке custom, удалив ненужные функции
+
+#define USE_BUTTONS 1         // использовать физические кнопки управления играми (0 нет, 1 да)
+#define BT_MODE 1             // использовать блютус (0 нет, 1 да)
+#define USE_NOISE_EFFECTS 1   // крутые полноэкранные эффекты (0 нет, 1 да) СИЛЬНО ЖРУТ ПАМЯТЬ!!!11
+#define USE_FONTS 1           // использовать буквы (бегущая строка) (0 нет, 1 да)
+#define USE_CLOCK 0           // использовать часы (0 нет, 1 да)
+
+// игры
+#define USE_SNAKE 0           // игра змейка (0 нет, 1 да)
+#define USE_TETRIS 0          // игра тетрис (0 нет, 1 да)
+#define USE_MAZE 0            // игра лабиринт (0 нет, 1 да)
+#define USE_RUNNER 0          // игра бегалка-прыгалка (0 нет, 1 да)
+#define USE_FLAPPY 0          // игра flappy bird
+#define USE_ARKAN 0           // игра арканоид
+
+// ****************** ПИНЫ ПОДКЛЮЧЕНИЯ *******************
+// Arduino (Nano, Mega)
+#if (MCU_TYPE == 0)
+#define LED_PIN 6           // пин ленты
+#define BUTT_UP 3           // кнопка вверх
+#define BUTT_DOWN 5         // кнопка вниз
+#define BUTT_LEFT 2         // кнопка влево
+#define BUTT_RIGHT 4        // кнопка вправо
+#define BUTT_SET 7          // кнопка выбор/игра
+
+// пины подписаны согласно pinout платы, а не надписям на пинах!
+// esp8266 - плату выбирал Wemos D1 R1
+#elif (MCU_TYPE == 1)
+#define LED_PIN 2           // пин ленты
+#define BUTT_UP 14          // кнопка вверх
+#define BUTT_DOWN 13        // кнопка вниз
+#define BUTT_LEFT 0         // кнопка влево
+#define BUTT_RIGHT 12       // кнопка вправо
+#define BUTT_SET 15         // кнопка выбор/игра
+
+// STM32 (BluePill) - плату выбирал STM32F103C
+#elif (MCU_TYPE == 2)
+#define LED_PIN PB12         // пин ленты
+#define BUTT_UP PA1          // кнопка вверх
+#define BUTT_DOWN PA3        // кнопка вниз
+#define BUTT_LEFT PA0        // кнопка влево
+#define BUTT_RIGHT PA2       // кнопка вправо
+#define BUTT_SET PA4         // кнопка выбор/игра
+#endif
+
+// ******************************** ДЛЯ РАЗРАБОТЧИКОВ ********************************
+#define DEBUG 0
+#define NUM_LEDS WIDTH * HEIGHT * SEGMENTS
+
+#define RUNNING_STRING 0
+#define CLOCK_MODE 1
+#define GAME_MODE 2
+#define MADNESS_NOISE 3
+#define CLOUD_NOISE 4
+#define LAVA_NOISE 5
+#define PLASMA_NOISE 6
+#define RAINBOW_NOISE 7
+#define RAINBOWSTRIPE_NOISE 8
+#define ZEBRA_NOISE 9
+#define FOREST_NOISE 10
+#define OCEAN_NOISE 11
+#define SNOW_ROUTINE 12
+#define SPARKLES_ROUTINE 13
+#define MATRIX_ROUTINE 14
+#define STARFALL_ROUTINE 15
+#define BALL_ROUTINE 16
+#define BALLS_ROUTINE 17
+#define RAINBOW_ROUTINE 18
+#define RAINBOWDIAGONAL_ROUTINE 19
+#define FIRE_ROUTINE 20
+#define IMAGE_MODE 21
+
+#if (MCU_TYPE == 1)
+#define FASTLED_INTERRUPT_RETRY_COUNT 0
+#define FASTLED_ALLOW_INTERRUPTS 0
+#include <ESP8266WiFi.h>
+#endif
+
+#include "FastLED.h"
+CRGB leds[NUM_LEDS];
+String runningText = "";
+
+static const byte maxDim = max(WIDTH, HEIGHT);
+byte buttons = 4;   // 0 - верх, 1 - право, 2 - низ, 3 - лево, 4 - не нажата
+int globalBrightness = BRIGHTNESS;
+byte globalSpeed = 200;
+uint32_t globalColor = 0x00ff00;   // цвет при запуске зелёный
+byte breathBrightness;
+boolean loadingFlag = true;
+byte frameNum;
+int gameSpeed = DEMO_GAME_SPEED;
+boolean gameDemo = true;
+boolean idleState = true;  // флаг холостого режима работы
+boolean BTcontrol = false;  // флаг контроля с блютус. Если false - управление с кнопок
+int8_t thisMode = 0;
+boolean controlFlag = false;
+boolean gamemodeFlag = false;
+boolean mazeMode = false;
+int effects_speed = D_EFFECT_SPEED;
+int8_t hrs = 10, mins = 25, secs;
+boolean dotFlag;
+byte modeCode;    // 0 бегущая, 1 часы, 2 игры, 3 нойс маднесс и далее, 21 гифка или картинка,
+boolean fullTextFlag = false;
+boolean clockSet = false;
+
+#if (USE_FONTS == 1)
+#include "fonts.h"
+#endif
+
+uint32_t autoplayTime = ((long)AUTOPLAY_PERIOD * 1000);
+uint32_t autoplayTimer;
+
+#include "timerMinim.h"
+timerMinim effectTimer(D_EFFECT_SPEED);
+timerMinim gameTimer(DEMO_GAME_SPEED);
+timerMinim scrollTimer(D_TEXT_SPEED);
+timerMinim idleTimer((long)IDLE_TIME * 1000);
+timerMinim changeTimer(70);
+timerMinim halfsecTimer(500);
+
+#if (USE_CLOCK == 1 && (MCU_TYPE == 0 || MCU_TYPE == 1))
 #include <Wire.h>
+#include "RTClib.h"
 
-#define WIDTH  20
-#define HEIGHT 10
-
-#define NUM_LEDS (WIDTH * HEIGHT)
-
-#define DATA_PIN 6
-
-#define USE_SERIAL 0
-
-typedef uint32_t Timestamp;
-
-Timestamp old_timestamp;
-
-// #pragma pack(push, 1)
-static union {
-  struct Data { 
-    Timestamp current_timestamp;
-    CRGB leds[NUM_LEDS];
-  } data;
-  byte buffer[sizeof(data.current_timestamp) + sizeof(data.leds)];
-};
-// #pragma pack(pop)
-
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-
-unsigned int localPort = 8888; // Local port to listen on
-
-// An EthernetUDP instance to let us send and receive packets over UDP
-EthernetUDP Udp;
+RTC_DS3231 rtc;
+// RTC_DS1307 rtc;
+#endif
 
 void setup() {
-  // Initialize leds
-  FastLED.addLeds<NEOPIXEL, DATA_PIN>(data.leds, NUM_LEDS).setCorrection(TypicalPixelString);
-  FastLED.setBrightness(20);
-  FastLED.clear(true);
-  FastLED.show();
-
-#if USE_SERIAL
-  // Open serial communications and wait for port to open
+#if (BT_MODE == 1)
   Serial.begin(9600);
-
-  // Wait for serial port to connect. Needed for native USB port only
-  while (!Serial) {}
-#endif 
-  // You can use Ethernet.init(pin) to configure the CS pin
-  // Ethernet.init(10);  // Most Arduino shields
-  // Ethernet.init(5);   // MKR ETH shield
-  // Ethernet.init(0);   // Teensy 2.0
-  // Ethernet.init(20);  // Teensy++ 2.0
-  // Ethernet.init(15);  // ESP8266 with Adafruit Featherwing Ethernet
-  // Ethernet.init(33);  // ESP32 with Adafruit Featherwing Ethernet
-
-  // Start the Ethernet connection:
-#if USE_SERIAL
-  Serial.println("Initialize Ethernet with DHCP:");
 #endif
-  if (Ethernet.begin(mac) == 0) {
-#if USE_SERIAL
-    Serial.println("Failed to configure Ethernet using DHCP");
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-      Serial.println("Ethernet shield was not found");
-    } else if (Ethernet.linkStatus() == LinkOFF) {
-      Serial.println("Ethernet cable is not connected");
-    }
+
+#if (MCU_TYPE == 1)
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
 #endif
-    // No point in carrying on, so do nothing forevermore:
-    while (true) {
-      delay(1);
-    }
+
+#if (USE_CLOCK == 1 && (MCU_TYPE == 0 || MCU_TYPE == 1))
+  rtc.begin();
+  if (rtc.lostPower()) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
-
-#if USE_SERIAL
-  // Print your local IP address:
-  Serial.print("My IP address: ");
-  Serial.println(Ethernet.localIP());
+  DateTime now = rtc.now();
+  secs = now.second();
+  mins = now.minute();
+  hrs = now.hour();
 #endif
 
-  // Start UDP
-  Udp.begin(localPort);
+  // настройки ленты
+  FastLED.addLeds<WS2812, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.setBrightness(BRIGHTNESS);
+  if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
+  FastLED.clear();
+  FastLED.show();
+  randomSeed(analogRead(0) + analogRead(1));    // пинаем генератор случайных чисел
 }
 
 void loop() {
-  switch (Ethernet.maintain()) {
-#if USE_SERIAL
-    case DHCP_CHECK_RENEW_FAIL:
-      Serial.println("Error: renewed fail");
-      break;
-
-    case DHCP_CHECK_RENEW_OK:
-      Serial.println("Renewed success");
-      Serial.print("My IP address: ");
-      Serial.println(Ethernet.localIP());
-      break;
-
-    case DHCP_CHECK_REBIND_FAIL:
-      Serial.println("Error: rebind fail");
-      break;
-
-    case DHCP_CHECK_REBIND_OK:
-      Serial.println("Rebind success");
-      Serial.print("My IP address: ");
-      Serial.println(Ethernet.localIP());
-      break;
-#endif
-
-    default: // Nothing happened
-      break;
-  }
-
-  // If there's data available, read a packet
-  int packetSize = Udp.parsePacket();
-  if (packetSize) {
-#if USE_SERIAL
-    Serial.print("Received packet of size ");
-    Serial.println(packetSize);
-    Serial.print("From ");
-    IPAddress remote = Udp.remoteIP();
-    for (int i = 0; i < 4; ++i) {
-      Serial.print(remote[i], DEC);
-      if (i < 3) {
-        Serial.print(".");
-      }
-    }
-    Serial.print(", port ");
-    Serial.println(Udp.remotePort());
-#endif
-    // Read the packet into buffer
-    Udp.read(buffer, sizeof(buffer));
-    FastLED.show();
-    //if (data.current_timestamp > old_timestamp) {
-      // old_timestamp = data.current_timestamp;
-      // Serial.println(old_timestamp);
-      
-    //}
-
-    // Send a reply to the IP address and port that sent us the packet we received
-    // Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    // Udp.write(ReplyBuffer);
-    // Udp.endPacket();
-  }
+  customRoutine();
+  bluetoothRoutine();
 }
