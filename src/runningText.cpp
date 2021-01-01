@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 // работа с бегущим текстом
 
 // **************** НАСТРОЙКИ ****************
@@ -96,6 +98,9 @@ uint8_t getFont(uint8_t font, uint8_t row) {
 }
 
 #elif (USE_FONTS == 0)
+extern boolean fullTextFlag;
+extern byte modeCode;
+
 void fillString(String text, uint32_t color) {
   fullTextFlag = false;
   modeCode = 0;

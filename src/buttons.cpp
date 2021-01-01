@@ -1,3 +1,8 @@
+#include <Arduino.h>
+
+#include "config.h"
+
+#include "timerMinim.h"
 
 #if (USE_BUTTONS == 1)
 #include "buttonMinim.h"
@@ -16,6 +21,12 @@ buttonMinim bt_set(BUTT_SET, false);
 
 timerMinim stepTimer(100);
 #endif
+
+extern boolean controlFlag;
+extern timerMinim idleTimer;
+extern boolean idleState;
+extern boolean gameDemo;
+extern byte buttons;
 
 boolean checkButtons() {
 #if (USE_BUTTONS == 1)

@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 // вкладка работы с bluetooth
 
 #if (BT_MODE == 1)

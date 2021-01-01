@@ -1,3 +1,9 @@
+#include <Arduino.h>
+
+#include "config.h"
+
+#include <FastLED.h>
+
 // режим часов
 
 // ****************** НАСТРОЙКИ ЧАСОВ *****************

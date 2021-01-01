@@ -1,3 +1,11 @@
+#include <Arduino.h>
+
+#include "config.h"
+
+#include <FastLED.h>
+
+#include "timerMinim.h"
+
 // свой список режимов
 
 // ************************ НАСТРОЙКИ ************************
@@ -64,6 +72,34 @@
 // не забудьте указать количество режимов для корректного переключения с последнего на первый
 #define MODES_AMOUNT 28   // количество кастомных режимов (которые переключаются сами или кнопкой)
 
+extern int8_t thisMode;
+void fillString(String text, uint32_t color);
+void madnessNoise();
+void cloudNoise();
+void lavaNoise();
+void plasmaNoise();
+void rainbowNoise();
+void rainbowStripeNoise();
+void zebraNoise();
+void forestNoise();
+void oceanNoise();
+void snowRoutine();
+void sparklesRoutine();
+void matrixRoutine();
+void starfallRoutine();
+void ballRoutine();
+void ballsRoutine();
+void rainbowRoutine();
+void rainbowDiagonalRoutine();
+void fireRoutine();
+void snakeRoutine();
+void tetrisRoutine();
+void mazeRoutine();
+void runnerRoutine();
+void flappyRoutine();
+void arkanoidRoutine();
+void clockRoutine();
+
 void customModes() {
   switch (thisMode) {
 
@@ -129,6 +165,10 @@ void customModes() {
 
 }
 
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
+uint32_t gammaCorrection(uint32_t color);
+uint32_t expandColor(uint16_t color);
+
 // функция загрузки картинки в матрицу. должна быть здесь, иначе не работает =)
 void loadImage(uint16_t (*frame)[WIDTH]) {
   for (byte i = 0; i < WIDTH; i++)
@@ -186,6 +226,10 @@ static void prevMode() {
   prevModeHandler();
 #endif
 }
+
+extern boolean loadingFlag;
+extern boolean gamemodeFlag;
+
 void nextModeHandler() {
   thisMode++;
   if (thisMode >= MODES_AMOUNT) thisMode = 0;
@@ -205,6 +249,9 @@ void prevModeHandler() {
 
 int fadeBrightness;
 #if (SMOOTH_CHANGE == 1)
+extern timerMinim changeTimer;
+extern int globalBrightness;
+
 void modeFader() {
   if (fadeMode == 0) {
     fadeMode = 1;
@@ -235,6 +282,20 @@ void modeFader() {
 #endif
 
 boolean loadFlag2;
+extern boolean BTcontrol;
+extern timerMinim effectTimer;
+void btnsModeChange();
+extern boolean idleState;
+extern boolean fullTextFlag;
+extern uint32_t autoplayTimer;
+extern byte modeCode;
+extern uint32_t autoplayTime;
+extern boolean AUTOPLAY;
+extern timerMinim idleTimer;
+extern boolean gameDemo;
+extern int gameSpeed;
+extern timerMinim gameTimer;
+
 void customRoutine() {
   if (!BTcontrol) {
     if (!gamemodeFlag) {
@@ -304,6 +365,8 @@ void customRoutine() {
   }
 }
 
+extern int8_t hrs, mins, secs;;
+
 void timeSet(boolean type, boolean dir) {    // type: 0-часы, 1-минуты, dir: 0-уменьшить, 1-увеличить
   if (type) {
     if (dir) hrs++;
@@ -323,6 +386,14 @@ void timeSet(boolean type, boolean dir) {    // type: 0-часы, 1-минуты
   if (hrs > 23) hrs = 0;
   if (hrs < 0) hrs = 23;
 }
+
+extern boolean mazeMode;
+extern boolean clockSet;
+#if (USE_BUTTONS == 1)
+#include "buttonMinim.h"
+extern buttonMinim bt_set, bt_left, bt_right, bt_up, bt_down;
+#endif
+extern int effects_speed;
 
 void btnsModeChange() {
 #if (USE_BUTTONS == 1)

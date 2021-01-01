@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef FONTS_H
+#define FONTS_H
+
 // шрифты для вывода текста
 const uint8_t fontHEX[][5] PROGMEM = {
   {0x00, 0x00, 0x00, 0x00, 0x00}, //   0x20 32
@@ -162,3 +167,5 @@ const uint8_t fontHEX[][5] PROGMEM = {
   {0x7c, 0x10, 0x38, 0x44, 0x38}, //ю
   {0x08, 0x54, 0x34, 0x14, 0x7c}, //я 255
 };
+
+#endif // FONTS_H

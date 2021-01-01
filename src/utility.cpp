@@ -1,4 +1,15 @@
+#include <Arduino.h>
+
+#include "config.h"
+
+#include <FastLED.h>
+
 // служебные функции
+
+void drawDigit3x5(byte digit, byte X, byte Y, CRGB color);
+void drawDigit5x7(byte digit, byte X, byte Y, CRGB color);
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
+extern CRGB leds[];
 
 // отображаем счёт для игр
 void displayScore(byte score) {
@@ -182,7 +193,7 @@ gamma6[] = {
 };
 
 // преобразовать цвет из 16 битного в 24 битный
-static uint32_t expandColor(uint16_t color) {
+uint32_t expandColor(uint16_t color) {
   return ((uint32_t)pgm_read_byte(&gamma5[ color >> 11       ]) << 16) |
          ((uint32_t)pgm_read_byte(&gamma6[(color >> 5) & 0x3F]) <<  8) |
          pgm_read_byte(&gamma5[ color       & 0x1F]);
@@ -194,6 +205,8 @@ void fillAll(CRGB color) {
     leds[i] = color;
   }
 }
+
+uint16_t getPixelNumber(int8_t x, int8_t y);
 
 // функция отрисовки точки по координатам X Y
 void drawPixelXY(int8_t x, int8_t y, CRGB color) {
