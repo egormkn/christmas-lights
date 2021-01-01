@@ -1,3 +1,7 @@
+#include <Arduino.h>
+
+#include "config.h"
+
 // игра "flappy bird"
 
 // **************** НАСТРОЙКИ FLAPPY ****************

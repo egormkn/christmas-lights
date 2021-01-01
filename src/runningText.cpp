@@ -1,3 +1,11 @@
+#include <Arduino.h>
+
+#include "config.h"
+
+#include <FastLED.h>
+
+#include "timerMinim.h"
+
 // работа с бегущим текстом
 
 // **************** НАСТРОЙКИ ****************
@@ -12,9 +20,22 @@
 
 // --------------------- ДЛЯ РАЗРАБОТЧИКОВ ----------------------
 
+extern boolean loadingFlag;
+extern byte modeCode;
+extern boolean fullTextFlag;
+extern timerMinim scrollTimer;
+extern boolean BTcontrol;
+extern boolean gamemodeFlag;
+
 #if (USE_FONTS == 1)
 
 int offset = WIDTH;
+
+void drawLetter(uint8_t index, uint8_t letter, int16_t offset, uint32_t color);
+uint8_t getFont(uint8_t font, uint8_t row);
+extern CRGB leds[];
+uint16_t getPixelNumber(int8_t x, int8_t y);
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
 
 void fillString(String text, uint32_t color) {
   if (loadingFlag) {
@@ -82,6 +103,8 @@ void drawLetter(uint8_t index, uint8_t letter, int16_t offset, uint32_t color) {
   }
 }
 
+#include "fonts.h"
+
 // ------------- СЛУЖЕБНЫЕ ФУНКЦИИ --------------
 
 // интерпретатор кода символа в массиве fontHEX (для Arduino IDE 1.8.* и выше)
@@ -96,6 +119,9 @@ uint8_t getFont(uint8_t font, uint8_t row) {
 }
 
 #elif (USE_FONTS == 0)
+extern boolean fullTextFlag;
+extern byte modeCode;
+
 void fillString(String text, uint32_t color) {
   fullTextFlag = false;
   modeCode = 0;

@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef TIMERMINIM_H
+#define TIMERMINIM_H
+
 class timerMinim
 {
   public:
@@ -11,24 +16,4 @@ class timerMinim
     uint32_t _interval = 0;
 };
 
-timerMinim::timerMinim(uint32_t interval) {
-  _interval = interval;
-  _timer = millis();
-}
-
-void timerMinim::setInterval(uint32_t interval) {
-  _interval = interval;
-}
-
-boolean timerMinim::isReady() {
-  if ((long)millis() - _timer >= _interval) {
-    _timer = millis();
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void timerMinim::reset() {
-  _timer = millis();
-}
+#endif // TIMERMINIM_H

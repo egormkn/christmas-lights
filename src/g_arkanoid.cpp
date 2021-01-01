@@ -1,3 +1,7 @@
+#include <Arduino.h>
+
+#include "config.h"
+
 // игра "arkanoid"
 
 // **************** НАСТРОЙКИ ARKAN ****************

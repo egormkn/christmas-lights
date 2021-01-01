@@ -1,3 +1,9 @@
+#include <Arduino.h>
+
+#include "config.h"
+
+#include <FastLED.h>
+
 // эффекты
 
 // **************** НАСТРОЙКИ ЭФФЕКТОВ ****************
@@ -17,7 +23,7 @@
 
 // эффект "огонь"
 #define SPARKLES 1        // вылетающие угольки вкл выкл
-#define HUE_ADD 0         // добавка цвета в огонь (от 0 до 230) - меняет весь цвет пламени
+#define HUE_ADD 150       // добавка цвета в огонь (от 0 до 230) - меняет весь цвет пламени
 
 // эффект "кометы"
 #define TAIL_STEP 100     // длина хвоста кометы
@@ -35,6 +41,9 @@
 
 // *********** "дыхание" яркостью ***********
 boolean brightnessDirection;
+extern byte breathBrightness;
+extern int globalBrightness;
+
 void brightnessRoutine() {
   if (brightnessDirection) {
     breathBrightness += 2;
@@ -52,12 +61,19 @@ void brightnessRoutine() {
 
 // *********** смена цвета активных светодиодов (рисунка) ***********
 byte hue;
+uint32_t getPixColor(int thisSegm);
+extern CRGB leds[];
+
 void colorsRoutine() {
   hue += 4;
   for (int i = 0; i < NUM_LEDS; i++) {
     if (getPixColor(i) > 0) leds[i] = CHSV(hue, 255, 255);
   }
 }
+
+extern byte modeCode;
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
+uint32_t getPixColorXY(int8_t x, int8_t y);
 
 // *********** снегопад 2.0 ***********
 void snowRoutine() {
@@ -83,6 +99,8 @@ void snowRoutine() {
 int coordB[2];
 int8_t vectorB[2];
 CRGB ballColor;
+extern boolean loadingFlag;
+uint16_t getPixelNumber(int8_t x, int8_t y);
 
 void ballRoutine() {
   if (loadingFlag) {
@@ -138,7 +156,7 @@ void rainbowDiagonalRoutine() {
   hue += 3;
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
-      CHSV thisColor = CHSV((byte)(hue + (float)(WIDTH / HEIGHT * x + y) * (float)(255 / maxDim)), 255, 255);      
+      CHSV thisColor = CHSV((byte)(hue + (float)(WIDTH / HEIGHT * x + y) * (float)(255 / max(WIDTH, HEIGHT))), 255, 255);      
       drawPixelXY(x, y, thisColor); //leds[getPixelNumber(i, j)] = thisColor;
     }
   }
@@ -185,6 +203,10 @@ const unsigned char hueMask[8][16] PROGMEM = {
   {0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 , 0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 },
   {0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 }
 };
+
+void generateLine();
+void shiftUp();
+void drawFrame(int pcnt);
 
 void fireRoutine() {
   if (loadingFlag) {
@@ -313,6 +335,8 @@ void matrixRoutine() {
 int coord[BALLS_AMOUNT][2];
 int8_t vector[BALLS_AMOUNT][2];
 CRGB ballColors[BALLS_AMOUNT];
+void fader(byte step);
+extern uint32_t globalColor;
 
 void ballsRoutine() {
   if (loadingFlag) {
@@ -428,6 +452,8 @@ void ballsRoutine() {
   }
   }
 */
+
+void fadePixel(byte i, byte j, byte step);
 
 // функция плавного угасания цвета для всех пикселей
 void fader(byte step) {

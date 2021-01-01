@@ -1,3 +1,7 @@
+#include <Arduino.h>
+
+#include "config.h"
+
 // крутые полноэкраные эффекты
 // ******************* НАСТРОЙКИ *****************
 // "масштаб" эффектов. Чем меньше, тем крупнее!
@@ -32,6 +36,13 @@ uint8_t noise[HEIGHT][HEIGHT];
 CRGBPalette16 currentPalette( PartyColors_p );
 uint8_t colorLoop = 1;
 uint8_t ihue = 0;
+
+extern boolean loadingFlag;
+extern byte modeCode;
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
+
+void fillnoise8();
+void fillNoiseLED();
 
 void madnessNoise() {
   if (loadingFlag) {
