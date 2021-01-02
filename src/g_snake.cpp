@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#include "timerMinim.h"
+
 // игра змейка!
 #if (USE_SNAKE == 1)
 // **************** НАСТРОЙКИ ЗМЕЙКИ ****************
@@ -17,6 +19,21 @@ boolean apple_flag, missDelete = false;
 int8_t buttVector[MAX_LENGTH];
 int snakeLength;
 boolean butt_flag, pizdetc;
+
+extern boolean loadingFlag;
+extern boolean gamemodeFlag;
+extern byte modeCode;
+
+void newGameSnake();
+void buttonsTickSnake();
+extern timerMinim gameTimer;
+uint32_t getPixColorXY(int8_t x, int8_t y);
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
+extern boolean gameDemo;
+void snakeDemo();
+extern CRGB leds[];
+void displayScore(byte score);
+extern byte buttons;
 
 void snakeRoutine() {
   if (loadingFlag) {
@@ -169,6 +186,8 @@ void snakeDemo() {
     if (vectorY < 0) buttons = 3;
   }
 }
+
+boolean checkButtons();
 
 void buttonsTickSnake() {
   if (checkButtons()) {

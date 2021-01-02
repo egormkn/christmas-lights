@@ -49,12 +49,12 @@
 #define USE_CLOCK 0           // использовать часы (0 нет, 1 да)
 
 // игры
-#define USE_SNAKE 0           // игра змейка (0 нет, 1 да)
-#define USE_TETRIS 0          // игра тетрис (0 нет, 1 да)
+#define USE_SNAKE 1           // игра змейка (0 нет, 1 да)
+#define USE_TETRIS 1          // игра тетрис (0 нет, 1 да)
 #define USE_MAZE 0            // игра лабиринт (0 нет, 1 да)
 #define USE_RUNNER 0          // игра бегалка-прыгалка (0 нет, 1 да)
 #define USE_FLAPPY 0          // игра flappy bird
-#define USE_ARKAN 0           // игра арканоид
+#define USE_ARKAN 1           // игра арканоид
 
 // ****************** ПИНЫ ПОДКЛЮЧЕНИЯ *******************
 // Arduino (Nano, Mega)

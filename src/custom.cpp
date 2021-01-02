@@ -70,7 +70,7 @@
 //  break;
 
 // не забудьте указать количество режимов для корректного переключения с последнего на первый
-#define MODES_AMOUNT 28   // количество кастомных режимов (которые переключаются сами или кнопкой)
+#define MODES_AMOUNT 24   // количество кастомных режимов (которые переключаются сами или кнопкой)
 
 extern int8_t thisMode;
 void fillString(String text, uint32_t color);
@@ -149,16 +149,16 @@ void customModes() {
       break;
     case 22: tetrisRoutine();
       break;
-    case 23: mazeRoutine();
+    // case 23: mazeRoutine();
+    //   break;
+    // case 24: runnerRoutine();
+    //   break;
+    // case 25: flappyRoutine();
+    //   break;
+    case 23: arkanoidRoutine();
       break;
-    case 24: runnerRoutine();
-      break;
-    case 25: flappyRoutine();
-      break;
-    case 26: arkanoidRoutine();
-      break;
-    case 27: clockRoutine();
-      break;
+    // case 27: clockRoutine();
+    //   break;
   }
 
 }

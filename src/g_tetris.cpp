@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#include "timerMinim.h"
+
 //игра  тетрис!
 #if (USE_TETRIS == 1)
 // **************** НАСТРОЙКИ ТЕТРИС ****************
@@ -74,6 +76,28 @@ const int8_t figures[7][12][2] PROGMEM = {
     { -1, 1}, {0, 1}, {0, 2},
   }
 };
+
+extern boolean loadingFlag;
+void newGameTetris();
+extern boolean gamemodeFlag;
+extern byte modeCode;
+boolean checkButtons();
+extern byte buttons;
+void stepLeft();
+void stepRight();
+boolean checkArea(int8_t check_type);
+void redrawFigure(int8_t clr_ang, int8_t clr_pos, int8_t clr_height);
+extern timerMinim gameTimer;
+void gameOverTetris();
+void fixFigure();
+void checkAndClear();
+uint32_t getPixColorXY(int8_t x, int8_t y);
+extern CRGB leds[];
+uint16_t getPixelNumber(int8_t x, int8_t y);
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
+extern boolean gameDemo;
+void displayScore(byte score);
+extern int gameSpeed;
 
 void tetrisRoutine() {
   if (loadingFlag) {
@@ -338,6 +362,8 @@ boolean checkArea(int8_t check_type) {
   }
   return flag;    // возвращаем глобальный флаг, который говорит о том, столкнёмся мы с чем то или нет
 }
+
+void drawFigure(byte figure, byte angle, byte x, byte y, uint32_t color);
 
 // функция, которая удаляет текущую фигуру (красит её чёрным)
 // а затем перерисовывает её в новом положении

@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#include "timerMinim.h"
+
 // игра "arkanoid"
 
 // **************** НАСТРОЙКИ ARKAN ****************
@@ -31,6 +33,8 @@ timerMinim ballTimer(BALL_SPEED);
 timerMinim popTimeout(500);
 timerMinim shelfTimer(150);
 
+void generateBlocks();
+
 void newGameArkan() {
   arkScore = 0;
   generateBlocks();
@@ -40,6 +44,21 @@ void newGameArkan() {
   velX_ark = random(1, 4);
   velY_ark = (long)sqrt(sq(VELOCITY) - sq(velX_ark));
 }
+
+extern boolean loadingFlag;
+extern boolean gamemodeFlag;
+extern byte modeCode;
+extern boolean gameDemo;
+extern byte buttons;
+boolean checkButtons();
+void shelfLeft();
+void shelfRight();
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
+void gameOverArkan();
+uint32_t getPixColorXY(int8_t x, int8_t y);
+void redrawBlock(byte blockX, byte blockY);
+boolean checkBlocks();
+void displayScore(byte score);
 
 void arkanoidRoutine() {
   if (loadingFlag) {
