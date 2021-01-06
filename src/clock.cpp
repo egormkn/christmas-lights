@@ -3,6 +3,8 @@
 #include "config.h"
 
 #include <FastLED.h>
+#include <RTClib.h>
+#include "timerMinim.h"
 
 // режим часов
 
@@ -10,7 +12,7 @@
 #define OVERLAY_CLOCK 1     // часы на фоне всех эффектов и игр. Жрёт SRAM память!
 #define CLOCK_ORIENT 0      // 0 горизонтальные, 1 вертикальные
 #define CLOCK_X 0           // позиция часов по X (начало координат - левый нижний угол)
-#define CLOCK_Y 6           // позиция часов по Y (начало координат - левый нижний угол)
+#define CLOCK_Y 2           // позиция часов по Y (начало координат - левый нижний угол)
 #define COLOR_MODE 2        // Режим цвета часов
 //                          0 - заданные ниже цвета
 //                          1 - радужная смена (каждая цифра)
@@ -65,6 +67,9 @@ CRGB overlayLEDs[70];
 #if (USE_CLOCK == 1)
 CRGB clockLED[5] = {CRGB::White, CRGB::White, CRGB::Red, CRGB::White, CRGB::White};
 
+extern byte modeCode;
+extern RTC_DS3231 rtc;
+
 boolean overlayAllowed() {
   for (byte i = 0; i < listSize; i++)
     if (modeCode == overlayList[i]) return true;
@@ -89,6 +94,9 @@ void clockColor() {
     clockLED[4] = CHSV(clockHue + HUE_GAP * 2, 255, 255);
   }
 }
+
+void drawDigit3x5(byte digit, byte X, byte Y, CRGB color);
+void drawPixelXY(int8_t x, int8_t y, CRGB color);
 
 // нарисовать часы
 void drawClock(byte hrs, byte mins, boolean dots, byte X, byte Y) {
@@ -115,6 +123,14 @@ void drawClock(byte hrs, byte mins, boolean dots, byte X, byte Y) {
 #endif
 }
 
+extern boolean loadingFlag;
+extern int8_t hrs, mins, secs;
+extern boolean clockSet;
+extern boolean dotFlag;
+extern timerMinim halfsecTimer;
+
+void clockTicker();
+
 void clockRoutine() {
   if (loadingFlag) {
 #if (MCU_TYPE == 0 || MCU_TYPE == 1)
@@ -140,6 +156,8 @@ void clockRoutine() {
     drawClock(hrs, mins, 1, CLOCK_X, CLOCK_Y);
   }
 }
+
+boolean needColor();
 
 void clockTicker() {
   if (halfsecTimer.isReady()) {
@@ -188,6 +206,9 @@ void clockRoutine() {
 #endif
 
 #if (CLOCK_ORIENT == 0 && USE_CLOCK == 1 && OVERLAY_CLOCK == 1)
+extern CRGB leds[];
+uint16_t getPixelNumber(int8_t x, int8_t y);
+
 void clockOverlayWrap(byte posX, byte posY) {
   byte thisLED = 0;
   for (byte i = posX; i < posX + 15; i++) {

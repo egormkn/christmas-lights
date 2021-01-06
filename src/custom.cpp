@@ -70,7 +70,7 @@
 //  break;
 
 // не забудьте указать количество режимов для корректного переключения с последнего на первый
-#define MODES_AMOUNT 24   // количество кастомных режимов (которые переключаются сами или кнопкой)
+#define MODES_AMOUNT 25   // количество кастомных режимов (которые переключаются сами или кнопкой)
 
 extern int8_t thisMode;
 void fillString(String text, uint32_t color);
@@ -127,7 +127,7 @@ void customModes() {
       break;
     case 11: oceanNoise();
       break;
-    case 12: snowRoutine();
+    case 12: fillString("С РОЖДЕСТВОМ", 1);
       break;
     case 13: sparklesRoutine();
       break;
@@ -157,8 +157,8 @@ void customModes() {
     //   break;
     case 23: arkanoidRoutine();
       break;
-    // case 27: clockRoutine();
-    //   break;
+    case 24: clockRoutine();
+      break;
   }
 
 }

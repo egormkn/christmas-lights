@@ -22,7 +22,7 @@
 CRGB leds[NUM_LEDS];
 String runningText = "";
 boolean AUTOPLAY = 1;         // 0 выкл / 1 вкл автоматическую смену режимов (откл. можно со смартфона)
-int AUTOPLAY_PERIOD = 10;     // время между авто сменой режимов (секунды)
+int AUTOPLAY_PERIOD = 20;     // время между авто сменой режимов (секунды)
 
 byte buttons = 4;   // 0 - верх, 1 - право, 2 - низ, 3 - лево, 4 - не нажата
 int globalBrightness = BRIGHTNESS;
@@ -35,7 +35,7 @@ int gameSpeed = DEMO_GAME_SPEED;
 boolean gameDemo = true;
 boolean idleState = true;  // флаг холостого режима работы
 boolean BTcontrol = false;  // флаг контроля с блютус. Если false - управление с кнопок
-int8_t thisMode = 0;
+int8_t thisMode = 24;
 boolean controlFlag = false;
 boolean gamemodeFlag = false;
 boolean mazeMode = false;
