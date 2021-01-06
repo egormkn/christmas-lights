@@ -8,27 +8,13 @@
 
 // режим часов
 
-// ****************** НАСТРОЙКИ ЧАСОВ *****************
-#define OVERLAY_CLOCK 1     // часы на фоне всех эффектов и игр. Жрёт SRAM память!
-#define CLOCK_ORIENT 0      // 0 горизонтальные, 1 вертикальные
-#define CLOCK_X 0           // позиция часов по X (начало координат - левый нижний угол)
-#define CLOCK_Y 2           // позиция часов по Y (начало координат - левый нижний угол)
-#define COLOR_MODE 2        // Режим цвета часов
-//                          0 - заданные ниже цвета
-//                          1 - радужная смена (каждая цифра)
-//                          2 - радужная смена (часы, точки, минуты)
-
-#define MIN_COLOR CRGB::White     // цвет минут
-#define HOUR_COLOR CRGB::White    // цвет часов
-#define DOT_COLOR CRGB::Red       // цвет точек
-
-#define HUE_STEP 5          // шаг цвета часов в режиме радужной смены
-#define HUE_GAP 30          // шаг цвета между цифрами в режиме радужной смены
 
 // эффекты, в которых отображаются часы в наложении
 byte overlayList[] = {
   MADNESS_NOISE,
   OCEAN_NOISE,
+  FOREST_NOISE,
+  OCEAN_NOISE
 };
 
 /*
@@ -59,7 +45,7 @@ byte overlayList[] = {
 byte listSize = sizeof(overlayList);
 byte clockHue;
 #if (OVERLAY_CLOCK == 1 && CLOCK_ORIENT == 0)
-CRGB overlayLEDs[75];
+CRGB overlayLEDs[20 * 5];
 #elif (OVERLAY_CLOCK == 1 && CLOCK_ORIENT == 1)
 CRGB overlayLEDs[70];
 #endif
@@ -96,24 +82,25 @@ void clockColor() {
 }
 
 void drawDigit3x5(byte digit, byte X, byte Y, CRGB color);
+void drawDigit5x7(byte digit, byte X, byte Y, CRGB color);
 void drawPixelXY(int8_t x, int8_t y, CRGB color);
 
 // нарисовать часы
 void drawClock(byte hrs, byte mins, boolean dots, byte X, byte Y) {
 #if (CLOCK_ORIENT == 0)
-  if (hrs > 9) drawDigit3x5(hrs / 10, X, Y, clockLED[0]);
-  drawDigit3x5(hrs % 10, X + 4, Y, clockLED[1]);
-  if (dots) {
-    drawPixelXY(X + 7, Y + 1, clockLED[2]);
-    drawPixelXY(X + 7, Y + 3, clockLED[2]);
-  } else {
-    if (modeCode == 1) {
-      drawPixelXY(X + 7, Y + 1, 0);
-      drawPixelXY(X + 7, Y + 3, 0);
-    }
-  }
-  drawDigit3x5(mins / 10, X + 8, Y, clockLED[3]);
-  drawDigit3x5(mins % 10, X + 12, Y, clockLED[4]);
+  if (hrs > 9) drawDigit3x5(hrs / 10, X + 1, Y, clockLED[0]);
+  drawDigit3x5(hrs % 10, X + 6, Y, clockLED[1]);
+  // if (dots) {
+  //   drawPixelXY(X + 7, Y + 1, clockLED[2]);
+  //   drawPixelXY(X + 7, Y + 3, clockLED[2]);
+  // } else {
+  //   if (modeCode == 1) {
+  //     drawPixelXY(X + 7, Y + 1, 0);
+  //     drawPixelXY(X + 7, Y + 3, 0);
+  //   }
+  // }
+  drawDigit3x5(mins / 10, X + 11, Y, clockLED[3]);
+  drawDigit3x5(mins % 10, X + 16, Y, clockLED[4]);
 #else
   if (hrs > 9) drawDigit3x5(hrs / 10, X, Y + 5, clockLED[0]);
   drawDigit3x5(hrs % 10, X + 4, Y + 5, clockLED[1]);
@@ -211,7 +198,7 @@ uint16_t getPixelNumber(int8_t x, int8_t y);
 
 void clockOverlayWrap(byte posX, byte posY) {
   byte thisLED = 0;
-  for (byte i = posX; i < posX + 15; i++) {
+  for (byte i = posX; i < posX + 20; i++) {
     for (byte j = posY; j < posY + 5; j++) {
       overlayLEDs[thisLED] = leds[getPixelNumber(i, j)];
       thisLED++;
@@ -223,7 +210,7 @@ void clockOverlayWrap(byte posX, byte posY) {
 
 void clockOverlayUnwrap(byte posX, byte posY) {
   byte thisLED = 0;
-  for (byte i = posX; i < posX + 15; i++) {
+  for (byte i = posX; i < posX + 20; i++) {
     for (byte j = posY; j < posY + 5; j++) {
       leds[getPixelNumber(i, j)] = overlayLEDs[thisLED];
       thisLED++;

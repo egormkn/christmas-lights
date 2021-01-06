@@ -295,6 +295,12 @@ extern int gameSpeed;
 extern timerMinim gameTimer;
 extern CRGB leds[];
 
+boolean overlayAllowed();
+boolean needUnwrap();
+void clockOverlayUnwrap(byte posX, byte posY);
+void clockOverlayWrap(byte posX, byte posY);
+void setOverlayColors();
+
 void customRoutine() {
   if (!BTcontrol) {
     if (!gamemodeFlag) {
